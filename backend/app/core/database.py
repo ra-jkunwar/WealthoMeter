@@ -8,11 +8,24 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 
+# For Supabase and other cloud databases, we need SSL connections
+# Check if DATABASE_URL contains SSL parameters, if not add them
+database_url = settings.DATABASE_URL
+
+# If connecting to Supabase and SSL params not in URL, add them
+if "supabase.co" in database_url and "sslmode" not in database_url:
+    # Add SSL mode to connection string
+    separator = "&" if "?" in database_url else "?"
+    database_url = f"{database_url}{separator}sslmode=require"
+
 engine = create_engine(
-    settings.DATABASE_URL,
+    database_url,
     pool_pre_ping=True,
     pool_size=10,
-    max_overflow=20
+    max_overflow=20,
+    connect_args={
+        "sslmode": "require" if "supabase.co" in database_url else None
+    } if "supabase.co" in database_url else {}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
