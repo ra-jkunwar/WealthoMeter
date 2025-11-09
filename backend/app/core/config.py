@@ -3,7 +3,7 @@ Application configuration
 """
 
 from pydantic_settings import BaseSettings
-from typing import List, Union
+from typing import List
 from pydantic import field_validator
 
 
@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # CORS - can be set as comma-separated string or list
-    CORS_ORIGINS: Union[str, List[str]] = [
+    # The validator will convert comma-separated strings to lists
+    CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
