@@ -53,13 +53,29 @@ if "supabase.co" in database_url:
         parsed.fragment
     ))
 
-# Configure connect_args for SSL
+# Configure connect_args for SSL and connection options
 connect_args = {}
 if "supabase.co" in database_url:
     # For Supabase, ensure SSL is required
+    # Also force IPv4 to avoid IPv6 connection issues
     connect_args = {
-        "sslmode": "require"
+        "sslmode": "require",
+        "connect_timeout": 10,
     }
+    # Force IPv4 by resolving hostname to IPv4 address
+    # This helps avoid "Network is unreachable" errors with IPv6
+    try:
+        import socket
+        parsed = urllib.parse.urlparse(database_url)
+        hostname = parsed.hostname
+        if hostname:
+            # Resolve to IPv4 address
+            ipv4_address = socket.gethostbyname(hostname)
+            # Replace hostname with IP in connection string
+            database_url = database_url.replace(hostname, ipv4_address)
+    except Exception:
+        # If DNS resolution fails, continue with hostname
+        pass
 
 engine = create_engine(
     database_url,
