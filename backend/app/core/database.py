@@ -10,12 +10,17 @@ import urllib.parse
 from app.core.config import settings
 
 # For Supabase and other cloud databases, we need SSL connections
-# Convert direct connection to connection pooler if needed
+# Convert direct connection to connection pooler if needed (only for production/cloud)
 database_url = settings.DATABASE_URL
 
-# If connecting to Supabase, use connection pooler (port 6543) instead of direct (port 5432)
+# Only use connection pooler in production (Render, etc.) - not for local development
+# Check if we're in a cloud environment (Render sets RENDER env var)
+import os
+is_production = os.getenv("RENDER") is not None or os.getenv("DYNO") is not None
+
+# If connecting to Supabase in production, use connection pooler (port 6543) instead of direct (port 5432)
 # This is more reliable for external connections and handles IPv4/IPv6 better
-if "supabase.co" in database_url and ":5432" in database_url:
+if is_production and "supabase.co" in database_url and ":5432" in database_url:
     # Replace direct connection port with pooler port
     database_url = database_url.replace(":5432", ":6543")
     # Replace db. with postgres. for pooler connection
