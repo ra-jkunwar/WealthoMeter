@@ -56,14 +56,24 @@ async def send_email(
         # According to Brevo docs: https://developers.brevo.com/docs/smtp-integration
         # - Port 587 or 2525: Use STARTTLS (non-encrypted connection upgraded to TLS)
         # - Port 465: Use SSL/TLS (encrypted connection from start)
-        # We're using port 587, so we use start_tls=True
-        # Increase timeout for cloud platforms that may have network delays
-        smtp = aiosmtplib.SMTP(
-            hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            start_tls=True,  # STARTTLS for port 587 (Brevo requirement)
-            timeout=30,  # Increase timeout to 30 seconds for cloud platforms
-        )
+        # We're using port 465 for better reliability on cloud platforms like Render
+        # Port 465 requires use_tls=True (NOT start_tls)
+        if settings.SMTP_PORT == 465:
+            # Port 465: Use SSL/TLS from the start
+            smtp = aiosmtplib.SMTP(
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                use_tls=True,  # SSL/TLS for port 465 (NOT start_tls)
+                timeout=30,  # Increase timeout to 30 seconds for cloud platforms
+            )
+        else:
+            # Port 587 or 2525: Use STARTTLS
+            smtp = aiosmtplib.SMTP(
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                start_tls=True,  # STARTTLS for port 587/2525
+                timeout=30,  # Increase timeout to 30 seconds for cloud platforms
+            )
         await smtp.connect(timeout=30)
         await smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         await smtp.send_message(msg)

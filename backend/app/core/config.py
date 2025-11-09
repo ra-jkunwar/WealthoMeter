@@ -78,10 +78,12 @@ class Settings(BaseSettings):
     
     # Email (for invites) - Brevo Configuration
     # All must be set via environment variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL
-    SMTP_HOST: str = ""  # Set via SMTP_HOST env variable
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""  # Set via SMTP_USER env variable
-    SMTP_PASSWORD: str = ""  # Set via SMTP_PASSWORD env variable
+    # Recommended: Use port 465 (SSL/TLS) for better reliability on cloud platforms like Render
+    # Port 587 (STARTTLS) may be blocked or slow on Render free tier
+    SMTP_HOST: str = ""  # Set via SMTP_HOST env variable (e.g., smtp-relay.brevo.com)
+    SMTP_PORT: int = 465  # Default to 465 (SSL/TLS) for better reliability
+    SMTP_USER: str = ""  # Set via SMTP_USER env variable (Brevo SMTP login)
+    SMTP_PASSWORD: str = ""  # Set via SMTP_PASSWORD env variable (Brevo SMTP key)
     FROM_EMAIL: str = ""  # Set via FROM_EMAIL env variable
     
     # Frontend
