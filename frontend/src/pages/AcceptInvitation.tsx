@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { Eye, EyeOff, Loader2, Phone, User, CheckCircle, AlertCircle } from 'lucide-react'
 import AuthLayout from '../components/AuthLayout'
@@ -8,7 +8,6 @@ import toast from 'react-hot-toast'
 
 export default function AcceptInvitation() {
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
   const token = searchParams.get('token')
   
   const [password, setPassword] = useState('')
