@@ -3,7 +3,8 @@ Application configuration
 """
 
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Union
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -12,16 +13,22 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # CORS
-    CORS_ORIGINS: List[str] = [
+    # CORS - can be set as comma-separated string or list
+    CORS_ORIGINS: Union[str, List[str]] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
     
-    # Allow CORS_ORIGINS to be set via environment variable (comma-separated)
-    # This will be parsed in main.py
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from string (comma-separated) or list"""
+        if isinstance(v, str):
+            # Split comma-separated string and strip whitespace
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
     
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/wealthometer"
