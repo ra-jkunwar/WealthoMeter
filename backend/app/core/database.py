@@ -14,13 +14,21 @@ from app.core.config import settings
 database_url = settings.DATABASE_URL
 
 # Only use connection pooler in production (Render, etc.) - not for local development
-# Check if we're in a cloud environment (Render sets RENDER env var)
+# Check if we're in a cloud environment
 import os
-is_production = os.getenv("RENDER") is not None or os.getenv("DYNO") is not None
+# Render sets PORT env var, Heroku sets DYNO, other platforms may set different vars
+is_production = (
+    os.getenv("RENDER") is not None or 
+    os.getenv("DYNO") is not None or 
+    os.getenv("PORT") is not None or
+    os.getenv("RAILWAY_ENVIRONMENT") is not None or
+    os.getenv("VERCEL") is not None
+)
 
-# If connecting to Supabase in production, use connection pooler (port 6543) instead of direct (port 5432)
-# This is more reliable for external connections and handles IPv4/IPv6 better
-if is_production and "supabase.co" in database_url and ":5432" in database_url:
+# For Supabase, always use connection pooler (port 6543) instead of direct (port 5432)
+# The pooler is more reliable for external connections and handles IPv4/IPv6 better
+# Direct connection (5432) often fails with "Network is unreachable" from cloud platforms
+if "supabase.co" in database_url and ":5432" in database_url:
     # Replace direct connection port with pooler port
     database_url = database_url.replace(":5432", ":6543")
     # Replace db. with postgres. for pooler connection
