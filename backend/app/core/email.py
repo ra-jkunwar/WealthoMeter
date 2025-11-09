@@ -57,12 +57,14 @@ async def send_email(
         # - Port 587 or 2525: Use STARTTLS (non-encrypted connection upgraded to TLS)
         # - Port 465: Use SSL/TLS (encrypted connection from start)
         # We're using port 587, so we use start_tls=True
+        # Increase timeout for cloud platforms that may have network delays
         smtp = aiosmtplib.SMTP(
             hostname=settings.SMTP_HOST,
             port=settings.SMTP_PORT,
             start_tls=True,  # STARTTLS for port 587 (Brevo requirement)
+            timeout=30,  # Increase timeout to 30 seconds for cloud platforms
         )
-        await smtp.connect()
+        await smtp.connect(timeout=30)
         await smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         await smtp.send_message(msg)
         await smtp.quit()
