@@ -15,10 +15,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port (Render will set PORT env variable)
+# Expose port (Railway/Render will set PORT env variable)
 EXPOSE 8000
 
 # Run migrations and start server
-# Note: For Render, migrations run in build command, so we just start the server here
+# Note: For Railway/Render, migrations run in build command, so we just start the server here
 CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
 
