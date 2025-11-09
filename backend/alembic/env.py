@@ -35,18 +35,11 @@ def get_url():
     
     database_url = settings.DATABASE_URL
     
-    # For Supabase, always use connection pooler (port 6543) instead of direct (port 5432)
-    # The pooler is more reliable for external connections and handles IPv4/IPv6 better
+    # For Supabase, use direct connection with SSL
+    # The connection pooler hostname format varies and may not be available
+    # Direct connection works fine if network restrictions allow it
     if "supabase.co" in database_url:
-        # Always use pooler for Supabase - replace direct connection with pooler
-        if ":5432" in database_url:
-            # Replace direct connection port with pooler port
-            database_url = database_url.replace(":5432", ":6543")
-        # Replace db. with postgres. for pooler connection (if not already postgres.)
-        if "@db." in database_url:
-            database_url = database_url.replace("@db.", "@postgres.")
-        
-        # Ensure SSL mode is set
+        # Ensure SSL mode is set for direct connection
         parsed = urllib.parse.urlparse(database_url)
         query_params = urllib.parse.parse_qs(parsed.query)
         
