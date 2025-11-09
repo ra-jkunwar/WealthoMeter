@@ -22,7 +22,7 @@ app = FastAPI(
 # CORS middleware
 # CORS_ORIGINS is automatically parsed from environment by the validator
 # It can be set as comma-separated string: "https://wealtho-meter.vercel.app,http://localhost:5173"
-cors_origins = settings.CORS_ORIGINS.copy()
+cors_origins = settings.cors_origins_list.copy()
 # Always add FRONTEND_URL to allowed origins
 if settings.FRONTEND_URL:
     cors_origins.append(settings.FRONTEND_URL)

@@ -3,8 +3,9 @@ Application configuration
 """
 
 from pydantic_settings import BaseSettings
-from typing import List
-from pydantic import field_validator
+from typing import List, Union
+from pydantic import field_validator, GetJsonSchemaHandler
+from pydantic.json_schema import JsonSchemaValue
 
 
 class Settings(BaseSettings):
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     
     # CORS - can be set as comma-separated string or list
     # The validator will convert comma-separated strings to lists
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: Union[str, List[str]] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
@@ -26,10 +27,22 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, v):
         """Parse CORS_ORIGINS from string (comma-separated) or list"""
+        if v is None:
+            return []
         if isinstance(v, str):
             # Split comma-separated string and strip whitespace
-            return [origin.strip() for origin in v.split(',') if origin.strip()]
-        return v
+            origins = [origin.strip() for origin in v.split(',') if origin.strip()]
+            return origins if origins else []
+        if isinstance(v, list):
+            return v
+        return []
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Get CORS_ORIGINS as a list"""
+        if isinstance(self.CORS_ORIGINS, str):
+            return [origin.strip() for origin in self.CORS_ORIGINS.split(',') if origin.strip()]
+        return self.CORS_ORIGINS if isinstance(self.CORS_ORIGINS, list) else []
     
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/wealthometer"
