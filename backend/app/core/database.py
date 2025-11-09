@@ -18,14 +18,20 @@ if "supabase.co" in database_url and "sslmode" not in database_url:
     separator = "&" if "?" in database_url else "?"
     database_url = f"{database_url}{separator}sslmode=require"
 
+# Configure connect_args for SSL if needed
+connect_args = {}
+if "supabase.co" in database_url:
+    # For Supabase, ensure SSL is required
+    connect_args = {
+        "sslmode": "require"
+    }
+
 engine = create_engine(
     database_url,
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
-    connect_args={
-        "sslmode": "require" if "supabase.co" in database_url else None
-    } if "supabase.co" in database_url else {}
+    connect_args=connect_args
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
