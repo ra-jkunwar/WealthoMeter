@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: wealthometer-backend
+    env: python
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false  # Set in Render dashboard: smtp-relay.brevo.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false  # Set in Render dashboard: your-brevo-smtp-user
+      - key: SMTP_PASSWORD
+        sync: false  # Set in Render dashboard: your-brevo-smtp-password
+      - key: FROM_EMAIL
+        sync: false  # Set in Render dashboard: your-verified-sender-email
+
