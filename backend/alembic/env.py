@@ -60,16 +60,28 @@ def get_url():
         
         # Force IPv4 by resolving hostname to IPv4 address
         # This helps avoid "Network is unreachable" errors with IPv6
+        # Use getaddrinfo with AF_INET to explicitly force IPv4 only
         try:
             hostname = parsed.hostname
-            if hostname:
-                # Resolve to IPv4 address
-                ipv4_address = socket.gethostbyname(hostname)
-                # Replace hostname with IP in connection string
-                database_url = database_url.replace(hostname, ipv4_address)
-        except Exception:
+            if hostname and not hostname.replace('.', '').replace(':', '').isdigit():
+                # Only resolve if it's a hostname, not already an IP
+                # Use getaddrinfo with AF_INET to force IPv4 only
+                addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET, socket.SOCK_STREAM)
+                if addr_info:
+                    # Get first IPv4 address
+                    ipv4_address = addr_info[0][4][0]
+                    # Replace hostname with IP in connection string
+                    # Need to replace in netloc (hostname:port) format
+                    if parsed.port:
+                        new_netloc = f"{ipv4_address}:{parsed.port}"
+                    else:
+                        new_netloc = ipv4_address
+                    database_url = database_url.replace(parsed.netloc, new_netloc)
+        except Exception as e:
             # If DNS resolution fails, continue with hostname
-            pass
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to resolve IPv4 for {hostname if 'hostname' in locals() else 'unknown'}: {e}")
     
     return database_url
 
