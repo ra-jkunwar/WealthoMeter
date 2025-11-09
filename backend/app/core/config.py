@@ -4,8 +4,7 @@ Application configuration
 
 from pydantic_settings import BaseSettings
 from typing import List, Union
-from pydantic import field_validator, GetJsonSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
