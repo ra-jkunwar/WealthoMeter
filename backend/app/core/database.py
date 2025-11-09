@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import urllib.parse
+import socket
 
 from app.core.config import settings
 
@@ -65,9 +66,8 @@ if "supabase.co" in database_url:
     # Force IPv4 by resolving hostname to IPv4 address
     # This helps avoid "Network is unreachable" errors with IPv6
     try:
-        import socket
-        parsed = urllib.parse.urlparse(database_url)
-        hostname = parsed.hostname
+        parsed_url = urllib.parse.urlparse(database_url)
+        hostname = parsed_url.hostname
         if hostname:
             # Resolve to IPv4 address
             ipv4_address = socket.gethostbyname(hostname)

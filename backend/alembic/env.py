@@ -28,10 +28,10 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    """Get database URL with Supabase pooler conversion applied"""
+    """Get database URL with Supabase SSL and IPv4 resolution"""
     from app.core.config import settings
     import urllib.parse
-    import os
+    import socket
     
     database_url = settings.DATABASE_URL
     
@@ -57,6 +57,19 @@ def get_url():
             new_query,
             parsed.fragment
         ))
+        
+        # Force IPv4 by resolving hostname to IPv4 address
+        # This helps avoid "Network is unreachable" errors with IPv6
+        try:
+            hostname = parsed.hostname
+            if hostname:
+                # Resolve to IPv4 address
+                ipv4_address = socket.gethostbyname(hostname)
+                # Replace hostname with IP in connection string
+                database_url = database_url.replace(hostname, ipv4_address)
+        except Exception:
+            # If DNS resolution fails, continue with hostname
+            pass
     
     return database_url
 
