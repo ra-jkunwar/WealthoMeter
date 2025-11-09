@@ -53,40 +53,13 @@ if "supabase.co" in database_url:
         parsed.fragment
     ))
 
-# Configure connect_args for SSL and connection options
+# Configure connect_args for SSL
 connect_args = {}
 if "supabase.co" in database_url:
     # For Supabase, ensure SSL is required
-    # Also force IPv4 to avoid IPv6 connection issues
     connect_args = {
         "sslmode": "require",
-        "connect_timeout": 10,
     }
-    # Force IPv4 by resolving hostname to IPv4 address
-    # This helps avoid "Network is unreachable" errors with IPv6
-    # Use getaddrinfo with AF_INET to explicitly force IPv4 only
-    try:
-        parsed_url = urllib.parse.urlparse(database_url)
-        hostname = parsed_url.hostname
-        if hostname and not hostname.replace('.', '').replace(':', '').isdigit():
-            # Only resolve if it's a hostname, not already an IP
-            # Use getaddrinfo with AF_INET to force IPv4 only
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET, socket.SOCK_STREAM)
-            if addr_info:
-                # Get first IPv4 address
-                ipv4_address = addr_info[0][4][0]
-                # Replace hostname with IP in connection string
-                # Need to replace in netloc (hostname:port) format
-                if parsed_url.port:
-                    new_netloc = f"{ipv4_address}:{parsed_url.port}"
-                else:
-                    new_netloc = ipv4_address
-                database_url = database_url.replace(parsed_url.netloc, new_netloc)
-    except Exception as e:
-        # If DNS resolution fails, continue with hostname
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(f"Failed to resolve IPv4 for {hostname if 'hostname' in locals() else 'unknown'}: {e}")
 
 engine = create_engine(
     database_url,
