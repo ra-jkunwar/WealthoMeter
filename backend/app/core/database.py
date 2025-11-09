@@ -28,11 +28,14 @@ is_production = (
 # For Supabase, always use connection pooler (port 6543) instead of direct (port 5432)
 # The pooler is more reliable for external connections and handles IPv4/IPv6 better
 # Direct connection (5432) often fails with "Network is unreachable" from cloud platforms
-if "supabase.co" in database_url and ":5432" in database_url:
-    # Replace direct connection port with pooler port
-    database_url = database_url.replace(":5432", ":6543")
-    # Replace db. with postgres. for pooler connection
-    database_url = database_url.replace("@db.", "@postgres.")
+if "supabase.co" in database_url:
+    # Always use pooler for Supabase - replace direct connection with pooler
+    if ":5432" in database_url:
+        # Replace direct connection port with pooler port
+        database_url = database_url.replace(":5432", ":6543")
+    # Replace db. with postgres. for pooler connection (if not already postgres.)
+    if "@db." in database_url:
+        database_url = database_url.replace("@db.", "@postgres.")
 
 # Ensure SSL mode is set for Supabase
 if "supabase.co" in database_url:
