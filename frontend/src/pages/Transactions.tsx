@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
-import { Plus, Upload, X, Loader2, Receipt, Download } from 'lucide-react'
+import { Plus, Upload, X, Loader2, Receipt, Download, FileText, MessageSquare } from 'lucide-react'
 import EntityCard from '../components/EntityCard'
 
 export default function Transactions() {
   const [showForm, setShowForm] = useState(false)
   const [showCSVUpload, setShowCSVUpload] = useState(false)
+  const [showMessageParser, setShowMessageParser] = useState(false)
+  const [messageText, setMessageText] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null)
   const [formData, setFormData] = useState({
     account_id: '',
@@ -86,7 +88,7 @@ export default function Transactions() {
     },
   })
 
-  // Export function
+  // Export functions
   const exportCSV = async () => {
     try {
       const response = await api.get('/exports/transactions/csv', {
@@ -105,6 +107,55 @@ export default function Transactions() {
       console.error('Error exporting CSV:', error)
       toast.error(error.response?.data?.detail || 'Failed to export CSV report')
     }
+  }
+
+  const exportPDF = async () => {
+    try {
+      const response = await api.get('/exports/transactions/pdf', {
+        responseType: 'blob',
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `transactions_${format(new Date(), 'yyyyMMdd')}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF report downloaded successfully')
+    } catch (error: any) {
+      console.error('Error exporting PDF:', error)
+      toast.error(error.response?.data?.detail || 'Failed to export PDF report')
+    }
+  }
+
+  const parseMessageMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const response = await api.post('/messages/parse', { message })
+      return response.data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast.success(data.message || 'Transaction created successfully')
+      setShowMessageParser(false)
+      setMessageText('')
+      if (data.account?.created) {
+        toast.success(`New account "${data.account.name}" created automatically`)
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Failed to parse message')
+    },
+  })
+
+  const handleParseMessage = () => {
+    if (!messageText.trim()) {
+      toast.error('Please enter a message')
+      return
+    }
+    parseMessageMutation.mutate(messageText)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -142,13 +193,27 @@ export default function Transactions() {
               Track all your financial transactions
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={exportPDF}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-all hover:bg-accent hover:text-accent-foreground"
+            >
+              <FileText className="h-4 w-4" />
+              Export PDF
+            </button>
             <button
               onClick={exportCSV}
               className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-all hover:bg-accent hover:text-accent-foreground"
             >
               <Download className="h-4 w-4" />
               Export CSV
+            </button>
+            <button
+              onClick={() => setShowMessageParser(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-all hover:bg-accent hover:text-accent-foreground"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Forward Message
             </button>
             <button
               onClick={() => setShowCSVUpload(true)}
