@@ -232,6 +232,70 @@ export default function Transactions() {
           </div>
         </div>
 
+        {/* Message Parser Modal */}
+        {showMessageParser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+            <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-lg text-foreground">Forward Message</h3>
+                <button
+                  onClick={() => {
+                    setShowMessageParser(false)
+                    setMessageText('')
+                  }}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Paste SMS/Email Message
+                  </label>
+                  <textarea
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Paste your bank SMS or email here. Example: 'Rs. 1,000 debited from account ending 1234 on 15/12/2024 at MERCHANT NAME'"
+                    className="w-full h-32 rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/20 focus:outline-none resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    The system will automatically extract amount, account (last 4 digits), date, and transaction type.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowMessageParser(false)
+                      setMessageText('')
+                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-all hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleParseMessage}
+                    disabled={parseMessageMutation.isPending}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {parseMessageMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Parsing...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Parse & Create
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* CSV Upload Modal */}
         {showCSVUpload && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
