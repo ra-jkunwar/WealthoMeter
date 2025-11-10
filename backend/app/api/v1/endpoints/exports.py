@@ -182,9 +182,9 @@ async def export_net_worth_pdf(
     
     # Summary section
     summary_data = [
-        ["Total Assets", f"₹{total_assets:,.2f}"],
-        ["Total Liabilities", f"₹{total_liabilities:,.2f}"],
-        ["Net Worth", f"₹{total_net_worth:,.2f}"]
+        ["Total Assets", f"Rs. {total_assets:,.2f}"],
+        ["Total Liabilities", f"Rs. {total_liabilities:,.2f}"],
+        ["Net Worth", f"Rs. {total_net_worth:,.2f}"]
     ]
     summary_table = Table(summary_data, colWidths=[200, 200])
     summary_table.setStyle(TableStyle([
@@ -209,12 +209,12 @@ async def export_net_worth_pdf(
         table_data.append([
             account.name,
             account.account_type.value,
-            f"₹{balance:,.2f}",
+            f"Rs. {balance:,.2f}",
             account.currency
         ])
     
     # Total row
-    table_data.append(["TOTAL", "", f"₹{total_assets + total_liabilities:,.2f}", "INR"])
+    table_data.append(["TOTAL", "", f"Rs. {total_assets + total_liabilities:,.2f}", "INR"])
     
     # Create table
     table = Table(table_data)
