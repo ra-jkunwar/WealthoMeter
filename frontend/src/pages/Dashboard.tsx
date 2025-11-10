@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { format } from 'date-fns'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
-import { AlertCircle, TrendingUp, TrendingDown, Wallet, Users, Activity, LineChart } from 'lucide-react'
+import { AlertCircle, TrendingUp, TrendingDown, Wallet, Users, Activity, LineChart, Download, FileText } from 'lucide-react'
 import { StatCard } from '../components/StatCard'
 import dayjs from 'dayjs'
+import toast from 'react-hot-toast'
 
 interface DashboardData {
   net_worth: {
@@ -68,6 +69,47 @@ export default function Dashboard() {
     },
   })
 
+  // Export functions
+  const exportPDF = async () => {
+    try {
+      const response = await api.get('/exports/net-worth/pdf', {
+        responseType: 'blob',
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `net_worth_report_${format(new Date(), 'yyyyMMdd')}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF report downloaded successfully')
+    } catch (error: any) {
+      console.error('Error exporting PDF:', error)
+      toast.error(error.response?.data?.detail || 'Failed to export PDF report')
+    }
+  }
+
+  const exportCSV = async () => {
+    try {
+      const response = await api.get('/exports/net-worth/csv', {
+        responseType: 'blob',
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `net_worth_report_${format(new Date(), 'yyyyMMdd')}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('CSV report downloaded successfully')
+    } catch (error: any) {
+      console.error('Error exporting CSV:', error)
+      toast.error(error.response?.data?.detail || 'Failed to export CSV report')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -117,6 +159,30 @@ export default function Dashboard() {
   return (
     <div className="px-6 pt-0 pb-6 sm:pt-6">
       <div className="space-y-6">
+        {/* Header with Export Buttons */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">Overview of your financial portfolio</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={exportPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+            >
+              <FileText className="h-4 w-4" />
+              Export PDF
+            </button>
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
+          </div>
+        </div>
+
         {/* Stats Cards - Matching DataBuddy exact layout */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard

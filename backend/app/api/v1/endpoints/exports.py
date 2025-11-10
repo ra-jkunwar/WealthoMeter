@@ -150,6 +150,20 @@ async def export_net_worth_pdf(
             Account.is_active == True
         ).all()
     
+    # Calculate totals
+    total_assets = Decimal("0")
+    total_liabilities = Decimal("0")
+    
+    for account in accounts:
+        balance = account.current_balance or Decimal("0")
+        # Categorize as asset or liability
+        if account.account_type.value in ['credit_card', 'debt']:
+            total_liabilities += abs(balance)
+        else:
+            total_assets += balance if balance > 0 else Decimal("0")
+    
+    total_net_worth = total_assets - total_liabilities
+    
     # Create PDF
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -164,15 +178,34 @@ async def export_net_worth_pdf(
     # Date
     date_text = Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal'])
     elements.append(date_text)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 20))
     
-    # Table data
+    # Summary section
+    summary_data = [
+        ["Total Assets", f"₹{total_assets:,.2f}"],
+        ["Total Liabilities", f"₹{total_liabilities:,.2f}"],
+        ["Net Worth", f"₹{total_net_worth:,.2f}"]
+    ]
+    summary_table = Table(summary_data, colWidths=[200, 200])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.lightblue),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgreen),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 20))
+    
+    # Account details table
     table_data = [["Account Name", "Account Type", "Balance", "Currency"]]
     
-    total = Decimal("0")
     for account in accounts:
         balance = account.current_balance or Decimal("0")
-        total += balance
         table_data.append([
             account.name,
             account.account_type.value,
@@ -181,7 +214,7 @@ async def export_net_worth_pdf(
         ])
     
     # Total row
-    table_data.append(["TOTAL", "", f"₹{total:,.2f}", "INR"])
+    table_data.append(["TOTAL", "", f"₹{total_assets + total_liabilities:,.2f}", "INR"])
     
     # Create table
     table = Table(table_data)
